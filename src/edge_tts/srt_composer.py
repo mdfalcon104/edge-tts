@@ -121,8 +121,10 @@ def make_legal_content(content: str) -> str:
     r"""
     Remove illegal content from a content block. Illegal content includes:
 
-    * Blank lines
+    * Multiple consecutive blank lines (two or more newlines)
     * Starting or ending with a blank line
+
+    Single line breaks within content are preserved to allow multi-line subtitles.
 
     .. doctest::
 
@@ -133,14 +135,16 @@ def make_legal_content(content: str) -> str:
     :returns: The legalised content
     :rtype: srt
     """
-    # Optimisation: Usually the content we get is legally valid. Do a quick
-    # check to see if we really need to do anything here. This saves time from
-    # generating legal_content by about 50%.
-    if content and content[0] != "\n" and "\n\n" not in content:
-        return content
-
-    legal_content = MULTI_WS_REGEX.sub("\n", content.strip("\n"))
-    LOG.info("Legalised content %r to %r", content, legal_content)
+    # Strip leading and trailing newlines
+    content = content.strip("\n")
+    
+    # Replace multiple consecutive newlines with a single newline
+    # This allows single line breaks but prevents blank lines
+    legal_content = MULTI_WS_REGEX.sub("\n", content)
+    
+    if legal_content != content:
+        LOG.info("Legalised content %r to %r", content, legal_content)
+    
     return legal_content
 
 
